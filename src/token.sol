@@ -2,21 +2,29 @@
 pragma solidity >=0.8.10;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
 error MintPriceNotPaid();
 error MaxSupply();
 error NonExistentTokenURI();
 error WithdrawTransfer();
 
-contract DPEP is ERC20 {
-    constructor(_name memory, _symbol memory, _recepient account) ERC20(_name, _symbol) {
+contract DPEP is ERC20, Ownable {
+    constructor(string memory _name, string memory _symbol, address to) ERC20(_name, _symbol) Ownable(msg.sender) {
         uint256 amount = 500000000 * 10 ** 18;
-        _mint(_recepient, amount);
+        _mint(to, amount);
     }
 
     function burn(address from, uint256 value) external onlyOwner {
         _burn(from, value);
     }
 
-    function extractValue
+    function extractPaymentToken(uint256 amount, address token) external onlyOwner {
+        IERC20(token).transfer(msg.sender, amount);
+    }
+
+    function extractValue() external onlyOwner {
+        payable(msg.sender).transfer(address(this).balance);
+    }
 }
